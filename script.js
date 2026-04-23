@@ -71,7 +71,7 @@ const translations = {
     "contact.phoneLabel": "Τηλέφωνο",
     "contact.locationLabel": "Τοποθεσία",
     "contact.location": "Επαρχία Κουνάβων, 70100<br>Ηράκλειο Κρήτης",
-    "footer.text": "© 2035 by English in Tourism. Powered and secured by Wix",
+    "footer.text": "© 2035 by English in Tourism.",
   },
   en: {
     "brand.home": "Home",
@@ -144,7 +144,7 @@ const translations = {
     "contact.phoneLabel": "Contact",
     "contact.locationLabel": "Offices",
     "contact.location": "Kounavoi, Heraklion Crete",
-    "footer.text": "© 2035 by English in Tourism. Powered and secured by Wix",
+    "footer.text": "© 2035 by English in Tourism.",
   },
 };
 
@@ -160,18 +160,27 @@ const magneticButtons = [...document.querySelectorAll(".magnetic")];
 const languageButtons = [...document.querySelectorAll(".language-button")];
 const i18nNodes = [...document.querySelectorAll("[data-i18n]")];
 const i18nHtmlNodes = [...document.querySelectorAll("[data-i18n-html]")];
-const orbitRing = document.querySelector("[data-orbit-ring]");
+const orbitRings = [...document.querySelectorAll("[data-orbit-ring]")];
+const mainOrbitRing =
+  document.querySelector('[data-orbit-ring="main"]') ?? orbitRings[0] ?? null;
+const scrollCue = document.querySelector(".scroll-cue");
 
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
-const createOrbitDots = () => {
-  if (!orbitRing) {
+if ("scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+}
+
+const createOrbitDots = (ring) => {
+  if (!ring) {
     return;
   }
 
-  orbitRing.innerHTML = "";
+  const isLoaderRing = ring.dataset.orbitRing === "loader";
+  const introBaseDelay = isLoaderRing ? 0.5 : 0;
+  ring.innerHTML = "";
   const totalDots = 44;
-  const radius = 48;
+  const radius = 49.2;
 
   for (let index = 0; index < totalDots; index += 1) {
     const dot = document.createElement("span");
@@ -179,44 +188,151 @@ const createOrbitDots = () => {
     const angleRad = (angleDeg * Math.PI) / 180;
     const x = 50 + Math.cos(angleRad) * radius;
     const y = 50 + Math.sin(angleRad) * radius;
-    const duration = `${6 + (index % 7) * 0.32}s`;
-    const delay = `${index * 0.04}s`;
+    const duration = `${4.2 + (index % 7) * 0.24}s`;
+    const introDelay = `${introBaseDelay + index * 0.04}s`;
+    const idleDelay = `${introBaseDelay + 0.5 + index * 0.04}s`;
     const scale = `${0.82 + ((index % 4) * 0.08)}`;
     const opacity = `${0.68 + ((index % 6) * 0.05)}`;
     const pushX = (Math.cos(angleRad) * 0.035).toFixed(3);
     const pushY = (Math.sin(angleRad) * 0.035).toFixed(3);
+    const idleDriftX = `${(Math.cos(angleRad) * 2.2).toFixed(2)}px`;
+    const idleDriftY = `${(Math.sin(angleRad) * 2.2).toFixed(2)}px`;
+    const introOffsetX = `${(-Math.cos(angleRad) * 18).toFixed(2)}px`;
+    const introOffsetY = `${(-Math.sin(angleRad) * 18).toFixed(2)}px`;
 
     dot.className = "opening__dot";
     dot.style.setProperty("--x", `${x}%`);
     dot.style.setProperty("--y", `${y}%`);
     dot.style.setProperty("--duration", duration);
-    dot.style.animationDelay = delay;
+    dot.style.setProperty("--intro-delay", introDelay);
+    dot.style.setProperty("--idle-delay", idleDelay);
     dot.style.setProperty("--scale", scale);
     dot.style.setProperty("--opacity", opacity);
     dot.style.setProperty("--push-x", pushX);
     dot.style.setProperty("--push-y", pushY);
-    orbitRing.appendChild(dot);
+    dot.style.setProperty("--idle-drift-x", idleDriftX);
+    dot.style.setProperty("--idle-drift-y", idleDriftY);
+    dot.style.setProperty("--intro-offset-x", introOffsetX);
+    dot.style.setProperty("--intro-offset-y", introOffsetY);
+    ring.appendChild(dot);
   }
 };
 
-createOrbitDots();
+orbitRings.forEach((ring) => createOrbitDots(ring));
 
-if (orbitRing && window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
-  const resetOrbitPointer = () => {
-    orbitRing.style.setProperty("--pointer-x", "0px");
-    orbitRing.style.setProperty("--pointer-y", "0px");
+if (mainOrbitRing && window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+  const dots = [...mainOrbitRing.querySelectorAll(".opening__dot")];
+  const effectRange = 78;
+  const maxShift = 11;
+  const maxScaleBoost = 0.42;
+  const easing = 0.16;
+  const settleEpsilon = 0.02;
+  const dotStates = dots.map(() => ({
+    x: 0,
+    y: 0,
+    scale: 1,
+    targetX: 0,
+    targetY: 0,
+    targetScale: 1,
+  }));
+  let pointerInside = false;
+  let pointerX = 0;
+  let pointerY = 0;
+  let rafId = 0;
+
+  const resetDotProximity = () => {
+    dotStates.forEach((state) => {
+      state.targetX = 0;
+      state.targetY = 0;
+      state.targetScale = 1;
+    });
   };
 
-  orbitRing.addEventListener("pointermove", (event) => {
-    const rect = orbitRing.getBoundingClientRect();
-    const x = event.clientX - rect.left - rect.width / 2;
-    const y = event.clientY - rect.top - rect.height / 2;
-    orbitRing.style.setProperty("--pointer-x", `${x * 0.08}px`);
-    orbitRing.style.setProperty("--pointer-y", `${y * 0.08}px`);
+  const updateTargets = () => {
+    const rect = mainOrbitRing.getBoundingClientRect();
+
+    dots.forEach((dot, index) => {
+      const state = dotStates[index];
+      if (!pointerInside) {
+        state.targetX = 0;
+        state.targetY = 0;
+        state.targetScale = 1;
+        return;
+      }
+
+      const dotX = (Number.parseFloat(dot.style.getPropertyValue("--x")) / 100) * rect.width;
+      const dotY = (Number.parseFloat(dot.style.getPropertyValue("--y")) / 100) * rect.height;
+      const dx = dotX - pointerX;
+      const dy = dotY - pointerY;
+      const distance = Math.hypot(dx, dy);
+      const influence = Math.max(0, 1 - distance / effectRange);
+
+      if (influence <= 0) {
+        state.targetX = 0;
+        state.targetY = 0;
+        state.targetScale = 1;
+        return;
+      }
+
+      const safeDistance = Math.max(distance, 0.001);
+      state.targetX = (dx / safeDistance) * maxShift * influence;
+      state.targetY = (dy / safeDistance) * maxShift * influence;
+      state.targetScale = 1 + maxScaleBoost * influence;
+    });
+  };
+
+  const animateProximity = () => {
+    updateTargets();
+    let hasMotion = false;
+
+    dots.forEach((dot, index) => {
+      const state = dotStates[index];
+      state.x += (state.targetX - state.x) * easing;
+      state.y += (state.targetY - state.y) * easing;
+      state.scale += (state.targetScale - state.scale) * easing;
+
+      dot.style.setProperty("--proximity-x", `${state.x.toFixed(2)}px`);
+      dot.style.setProperty("--proximity-y", `${state.y.toFixed(2)}px`);
+      dot.style.setProperty("--proximity-scale", state.scale.toFixed(3));
+
+      if (
+        Math.abs(state.targetX - state.x) > settleEpsilon ||
+        Math.abs(state.targetY - state.y) > settleEpsilon ||
+        Math.abs(state.targetScale - state.scale) > settleEpsilon
+      ) {
+        hasMotion = true;
+      }
+    });
+
+    if (pointerInside || hasMotion) {
+      rafId = window.requestAnimationFrame(animateProximity);
+    } else {
+      rafId = 0;
+    }
+  };
+
+  const ensureAnimationLoop = () => {
+    if (rafId === 0) {
+      rafId = window.requestAnimationFrame(animateProximity);
+    }
+  };
+
+  mainOrbitRing.addEventListener("pointermove", (event) => {
+    const rect = mainOrbitRing.getBoundingClientRect();
+    pointerInside = true;
+    pointerX = event.clientX - rect.left;
+    pointerY = event.clientY - rect.top;
+    ensureAnimationLoop();
   });
 
-  orbitRing.addEventListener("pointerleave", resetOrbitPointer);
-  resetOrbitPointer();
+  mainOrbitRing.addEventListener("pointerleave", () => {
+    pointerInside = false;
+    resetDotProximity();
+    ensureAnimationLoop();
+  });
+
+  resetDotProximity();
+  ensureAnimationLoop();
 }
 
 const setLanguage = async (lang, { animate = false } = {}) => {
@@ -271,9 +387,17 @@ const setLanguage = async (lang, { animate = false } = {}) => {
 };
 
 window.addEventListener("load", () => {
+  if (window.location.hash) {
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+  }
+  window.scrollTo(0, 0);
+
   const savedLanguage = localStorage.getItem("eng4sp-language") || "el";
   setLanguage(savedLanguage, { animate: false });
-  window.setTimeout(() => loader?.classList.add("is-hidden"), 550);
+  window.setTimeout(() => {
+    loader?.classList.add("is-hidden");
+    document.body.classList.remove("is-loading");
+  }, 1250);
 });
 
 languageButtons.forEach((button) => {
@@ -298,8 +422,18 @@ const updateProgress = () => {
   }
 };
 
+const updateTopState = () => {
+  const nearTop = window.scrollY < 80;
+  document.body.classList.toggle("is-at-top", nearTop);
+  if (scrollCue) {
+    scrollCue.setAttribute("aria-hidden", String(!nearTop));
+  }
+};
+
 updateProgress();
+updateTopState();
 window.addEventListener("scroll", updateProgress, { passive: true });
+window.addEventListener("scroll", updateTopState, { passive: true });
 
 if (navToggle && navMenu) {
   const setMenuState = (open) => {

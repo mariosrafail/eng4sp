@@ -14,13 +14,20 @@
     href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Cormorant+Garamond:wght@500;600;700&display=swap"
     rel="stylesheet"
   >
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
   <link rel="stylesheet" href="./styles.css">
 </head>
-<body>
+<body class="is-loading is-at-top">
   <div class="page-loader" aria-hidden="true">
-    <div class="page-loader__brand">
-      <span>English In Tourism</span>
-      <small>Modern motion experience</small>
+    <div class="page-loader__logo">
+      <div class="opening__mark">
+        <div class="opening__ring" data-orbit-ring="loader" aria-hidden="true"></div>
+        <div class="opening__core">
+          <h1>English<br>in Tourism</h1>
+          <p>Communicate. Connect.<br>Welcome the World.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -46,6 +53,29 @@
         <a href="#programs" data-i18n="nav.programs">Programs</a>
       </div>
 
+      <div class="nav-socials" aria-label="Social media links">
+        <a class="nav-social" href="https://www.facebook.com/wix" target="_blank" rel="noreferrer noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M14.5 8H16V5h-1.8C11.7 5 10 6.7 10 9.2V11H8v3h2v5h3v-5h2.3l.4-3H13V9.4c0-.9.4-1.4 1.5-1.4Z"></path>
+          </svg>
+        </a>
+        <a class="nav-social" href="https://www.instagram.com/wix" target="_blank" rel="noreferrer noopener" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M7.5 3h9A4.5 4.5 0 0 1 21 7.5v9a4.5 4.5 0 0 1-4.5 4.5h-9A4.5 4.5 0 0 1 3 16.5v-9A4.5 4.5 0 0 1 7.5 3Zm0 1.8A2.7 2.7 0 0 0 4.8 7.5v9a2.7 2.7 0 0 0 2.7 2.7h9a2.7 2.7 0 0 0 2.7-2.7v-9a2.7 2.7 0 0 0-2.7-2.7h-9Zm4.5 2.7a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 1.8a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4Zm4.9-.9a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z"></path>
+          </svg>
+        </a>
+        <a class="nav-social" href="https://x.com/wix" target="_blank" rel="noreferrer noopener" aria-label="X">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M17.4 4h2.9l-6.4 7.3L21.5 20h-6l-4.7-5.7L5.8 20H3l6.9-7.8L2.5 4h6.1l4.2 5.2L17.4 4Zm-1 14.4h1.6L7.6 5.5H6l10.4 12.9Z"></path>
+          </svg>
+        </a>
+        <a class="nav-social" href="https://www.tiktok.com/@wix" target="_blank" rel="noreferrer noopener" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M14.8 3h2.1c.2 1.8 1.2 3.1 3.1 3.3V8a6.2 6.2 0 0 1-3.2-1v6.2a5.2 5.2 0 1 1-5.2-5.2c.4 0 .8.1 1.2.2V10a3.4 3.4 0 1 0 2 3.1V3Z"></path>
+          </svg>
+        </a>
+      </div>
+
       <div class="language-pill" aria-label="Language selector">
         <button class="language-button is-active" type="button" data-lang="el" aria-pressed="true" aria-label="Greek">
           <img src="./assets/grc.png" alt="Greek">
@@ -60,13 +90,22 @@
   <main>
     <section class="opening shell" id="home">
       <div class="opening__mark reveal">
-        <div class="opening__ring" data-orbit-ring aria-hidden="true"></div>
+        <div class="opening__ring" data-orbit-ring="main" aria-hidden="true"></div>
         <div class="opening__core">
           <h1>English<br>in Tourism</h1>
           <p>Communicate. Connect.<br>Welcome the World.</p>
         </div>
       </div>
     </section>
+
+    <a class="scroll-cue" href="#welcome" aria-label="Scroll down">
+      <span class="scroll-cue__label">Scroll</span>
+      <span class="scroll-cue__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M12 4a1 1 0 0 1 1 1v11.59l4.3-4.3a1 1 0 1 1 1.4 1.42l-6 6a1 1 0 0 1-1.4 0l-6-6a1 1 0 1 1 1.4-1.42l4.3 4.3V5a1 1 0 0 1 1-1Z"></path>
+        </svg>
+      </span>
+    </a>
 
     <section class="hero shell panel">
       <div class="hero__media" data-parallax>
